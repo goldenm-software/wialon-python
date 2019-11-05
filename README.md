@@ -1,4 +1,3 @@
-
 # wialon-python
 
 wialon-python is a Wialon Remote API Wrapper for python language.
@@ -24,7 +23,7 @@ session_id = ''
 extra_params = {}
 
 # Initialize Wialon instance
-wialon = WialonSdk(is_development=True, scheme=scheme, host=host, port=port, session_id=session_id, extra_params=extra_params)
+wialon = WialonSdk(is_development=is_development, scheme=scheme, host=host, port=port, session_id=session_id, extra_params=extra_params)
 
 try:
   # Login with API Token

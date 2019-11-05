@@ -37,8 +37,8 @@ class WialonSdk:
     else:
       svc = str(method).replace("_", "/", 1)
 
-    arguments = self.default_params
-
+    arguments = {}
+    arguments.update(self.default_params)
     arguments.update(args)
 
     parameters = {
@@ -62,7 +62,7 @@ class WialonSdk:
     request = requests.post(url=url, params=parameters)
     response = request.json()
 
-    if 'error' in response:
+    if 'error' in response and response['error'] != 0:
       raise WialonError(response['error'])
 
     return response
@@ -125,14 +125,14 @@ class WialonSdk:
   def __getattr__(self, name):
     """Method missing handler"""
 
-    print("Missing {}".format(name))
-
     def method(*args):
       """Handler"""
       if self.is_development:
         print("=" * 30)
         print("Query method: {name}".format(name=name))
         print("=" * 30)
+
+        print("Arguments", len(args))
 
       arguments = {}
 
