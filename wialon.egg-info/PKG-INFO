@@ -1,0 +1,61 @@
+Metadata-Version: 2.1
+Name: wialon
+Version: 1.0.0
+Summary: Wialon Remote API for Python
+Home-page: https://github.com/goldenm-software/wialon-python
+Author: Golden M
+Author-email: support@goldenmcorp.com
+License: UNKNOWN
+Description: 
+        # wialon-python
+        
+        wialon-python is a Wialon Remote API Wrapper for python language.
+        
+        ## Installation
+        
+        Use the package manager [pip](https://pypi.org/) to install wialon-pythonn.
+        
+        ```bash
+        pip3 install wialon
+        ```
+        
+        ## Usage
+        
+        ```python
+        from wialon.sdk import WialonError, WialonSdk
+        
+        is_development = True
+        scheme = 'https'
+        host = 'hst-api.wialon.com'
+        port = 0
+        session_id = ''
+        extra_params = {}
+        
+        # Initialize Wialon instance
+        wialon = WialonSdk(is_development=True, scheme=scheme, host=host, port=port, session_id=session_id, extra_params=extra_params)
+        
+        try:
+          # Login with API Token
+          response = wialon.login('YourTokenHere')
+          print(response)
+          
+          # Logout
+          wialon.logout()
+        except WialonError as e:
+          # Wialon error handler
+          print(e)
+        except Exception as e:
+          print("Other errors related to code - {e}".format(e=e))
+        
+        ```
+        
+        ## Contributing
+        Pull requests are welcome. For major changes, please open an issue first to discuss what you would like to change.
+        
+        Please make sure to update tests as appropriate.
+        
+        ## License
+        [MIT](https://choosealicense.com/licenses/mit/)
+Platform: UNKNOWN
+Requires-Python: >=3.6
+Description-Content-Type: text/markdown

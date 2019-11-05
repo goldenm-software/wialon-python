@@ -1,0 +1,6 @@
+README.md
+setup.py
+wialon.egg-info/PKG-INFO
+wialon.egg-info/SOURCES.txt
+wialon.egg-info/dependency_links.txt
+wialon.egg-info/top_level.txt
