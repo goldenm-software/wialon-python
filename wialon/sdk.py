@@ -39,7 +39,10 @@ class WialonSdk:
 
     arguments = {}
     arguments.update(self.default_params)
-    arguments.update(args)
+    if type(args) == list:
+      arguments = args
+    else:
+      arguments.update(args)
 
     parameters = {
       'svc': svc,
