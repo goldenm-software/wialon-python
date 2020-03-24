@@ -39,7 +39,7 @@ class WialonSdk:
 
     arguments = {}
     arguments.update(self.default_params)
-    if type(args) == list:
+    if isinstance(args, list):
       arguments = args
     else:
       arguments.update(args)

@@ -6,7 +6,7 @@ with open("README.md", "r") as fh:
 
 setuptools.setup(
   name="wialon", # Replace with your own username
-  version="1.0.1",
+  version="1.0.3",
   author="Golden M",
   author_email="support@goldenmcorp.com",
   description="Wialon Remote API for Python",

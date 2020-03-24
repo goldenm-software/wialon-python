@@ -1,6 +1,8 @@
 # wialon-python
-
 wialon-python is a Wialon Remote API Wrapper for python language.
+
+[![GitHub license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/goldenm-software/wialon-python/blob/master/LICENSE)
+[![pypi version](https://badge.fury.io/py/wialon.svg)](https://pypi.org/project/wialon/)
 
 ## Installation
 
