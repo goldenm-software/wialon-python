@@ -1,0 +1,36 @@
+name: "Deploy package"
+
+on:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    permissions:
+      id-token: write
+      contents: read
+      repository-projects: read
+      packages: read
+
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/goldenm-software/python-builder:3.11
+      options: --user root
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Build
+        run: |
+          pip install --upgrade pip build twine
+          python3 -m build
+        
+      - name: Upload to Python Package Index
+        uses: pypa/gh-action-pypi-publish@v1.8.10
+        with:
+          user: ${{ secrets.GOLDENM_PYPI_USERNAME }}
+          password: ${{ secrets.GOLDENM_PYPI_PASSWORD }}
