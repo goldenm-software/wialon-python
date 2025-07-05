@@ -1,0 +1,50 @@
+name: "Checks before merging"
+
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+    branches:
+      - '*'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/goldenm-software/python-builder:uv-3.13-x86
+      options: --user root
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+    
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Lint
+        run: |
+          uv sync --only-group dev
+          uv run ruff check
+          uv run mypy .
+
+  uniitest:
+    needs: lint
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/goldenm-software/python-builder:uv-3.13-x86
+      options: --user root
+      credentials:
+        username: ${{ github.repository_owner }}
+        password: ${{ secrets.GITHUB_TOKEN }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: Install dependencies
+        run: |
+          uv sync
+          uv run pytest ./tests/
+

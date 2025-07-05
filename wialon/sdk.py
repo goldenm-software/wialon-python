@@ -1,8 +1,23 @@
 """SDK classes"""
+
 import json
 import logging
+import sys
+from typing import Any, cast
 
 import requests
+
+from wialon.exceptions import SdkException, WialonError
+
+if sys.version_info >= (3, 9):
+  from collections.abc import Callable
+else:
+  from typing import Callable
+
+if sys.version_info >= (3, 11):
+  from typing import Self
+else:
+  from typing_extensions import Self
 
 log = logging.getLogger('wialon.sdk')
 
@@ -10,30 +25,37 @@ log = logging.getLogger('wialon.sdk')
 class WialonSdk:
   """Sdk handler"""
 
+  _scheme: str
+  _host: str
+  _port: int
+  _session_id: str
+  _default_params: dict[str, Any]
+  _user_id: str
+
   def __init__(
-    self,
-    is_development: bool = False,
+    self: Self,
     scheme: str = 'https',
     host: str = 'hst-api.wialon.com',
     port: int = 0,
     session_id: str = '',
-    extra_params: dict = None,
-  ):
+    extra_params: dict[str, Any] | None = None,
+  ) -> None:
     """
-    Constructor
-    ---
-    Arguments:
-      - is_development : defines if the SDK is in development mode, this argument was deprecated
-                         in favor of logging module (logging.DEBUG level)
-      - scheme : defines the scheme to use, default is https
-      - host : defines the host to use, default is hst-api.wialon.com
-      - port : defines the port to use, default is 0. If the port is different to 0, the SDK will
-               use the scheme://host:port to perform any request, otherwise, the SDK will use
-               https://host to perform any request
-      - session_id : defines the session_id to use, default is empty string
-      - extra_params : defines the extra_params to use, default is None
+    Wialon SDK
+    :param scheme: defines the scheme to use, default is https
+    :type scheme: str
+    :param host: defines the host to use, default is hst-api.wialon
+    :type host: str
+    :param port: defines the port to use, default is 0. If the port
+                 is different to 0, the SDK will use the scheme://host:port to perform any request,
+                 otherwise, the SDK will use https://host to perform any request
+    :type port: int
+    :param session_id: defines the session_id to use, default is empty string
+    :type session_id: str
+    :param extra_params: defines the extra_params to use, default is None
+    :type extra_params: dict[str, Any] | None
     """
-    self._debug = is_development
+
     if not isinstance(scheme, str):
       raise SdkException(message='Invalid scheme, must be string')
     self._scheme = scheme
@@ -60,8 +82,8 @@ class WialonSdk:
     self._user_id = ''
 
   @property
-  def base_url(self) -> str:
-    """ Get the base URL to perform any request """
+  def base_url(self: Self) -> str:
+    """Get the base URL to perform any request"""
     if self._port > 0:
       url = f'{self._scheme}://{self._host}:{self._port}'
     else:
@@ -69,7 +91,7 @@ class WialonSdk:
 
     return f'{url}/wialon/ajax.html?'
 
-  def call(self, method: str, args: [dict | list]) -> dict:
+  def call(self: Self, method: str, args: dict[str, Any] | list[Any]) -> dict[str, Any] | list[Any]:
     """
     Call method
     Allows to call any method in the Remtoe API using the following rule:
@@ -96,24 +118,24 @@ class WialonSdk:
     else:
       svc = str(method).replace('_', '/', 1)
 
-    arguments = {}
-    arguments.update(self._default_params)
-
-    if isinstance(args, list):
-      arguments = args
-    else:
-      arguments.update(args)
-
-    try:
-      params = json.dumps(arguments)
-    except Exception as e:
-      raise SdkException(f'Internal error: {e}') from e
-
     parameters = {
       'svc': svc,
-      'params': params,
       'sid': self._session_id,
     }
+
+    if isinstance(args, list):
+      try:
+        parameters['params'] = json.dumps(args)
+      except Exception as e:
+        raise SdkException(f'Internal error: {e}') from e
+    else:
+      try:
+        arguments: dict[str, Any] = {}
+        arguments.update(self._default_params)
+        arguments.update(args)
+        parameters['params'] = json.dumps(arguments)
+      except Exception as e:
+        raise SdkException(f'Internal error: {e}') from e
 
     url = self.base_url
     for key, value in parameters.items():
@@ -123,7 +145,7 @@ class WialonSdk:
       'Call method: %s - svc: %s - params: %s - sessionId: %s',
       method,
       svc,
-      params,
+      parameters.get('params', ''),
       self._session_id,
     )
     log.debug('Call url: %s', url)
@@ -145,23 +167,49 @@ class WialonSdk:
 
       raise WialonError(code=response['error'], reason=reason)
 
-    return response
+    return cast(dict[str, Any], response)
 
-  def login(self, token: str):
-    """Login shortcut method"""
-    result = self.token_login({'token': token})
+  def login(self: Self, token: str) -> dict[str, Any]:
+    """
+    Perform a login operation using a token. To get a token, you can use our own token generator tool, free to use:
+    https://developers.layrz.com/tools/wialon-token-generator
+    :param token: defines the token to use, must be a string
+
+    :type token: str
+
+    :return: the response from the server, must be a dict
+    :rtype: dict[str, Any]
+    """
+    result = cast(dict[str, Any], self.token_login({'token': token}))
 
     self._user_id = result['user']['id']
     self._session_id = result['eid']
 
     return result
 
-  def logout(self):
-    """Logout shortcut method"""
-    self.core_logout()
+  def logout(self: Self) -> dict[str, Any]:
+    """
+    Logout the Wialon session. This method will invalidate the current session and clear the `session_id` and
+    `user_id` properties to ensure that the session is no longer valid.
 
-  def reverse_geocoding(self, latitude: float, longitude: float, flags: int = 1255211008):
-    """Reverse geocoding service"""
+    :return: the response from the server, must be a dict
+    :rtype: dict[str, Any]
+    """
+    return cast(dict[str, Any], self.core_logout())
+
+  def reverse_geocoding(self: Self, latitude: float, longitude: float, flags: int = 1255211008) -> str:
+    """
+    Reverse geocoding method using the Wialon API.
+
+    !Note: Your Wialon session will use the default geocoding service, that may be Google services or Wialon services.
+
+    :param latitude: Latitude of the location to reverse geocode
+    :type latitude: float
+    :param longitude: Longitude of the location to reverse geocode
+    :type longitude: float
+    :param flags: Flags for the reverse geocoding request, default is 125521
+    :type flags: int
+    """
 
     coordinates = json.dumps({'lon': longitude, 'lat': latitude})
 
@@ -174,105 +222,26 @@ class WialonSdk:
     try:
       request = requests.post(url=url)
       response = request.json()
-      return response[0]
-    except Exception as e:  #pylint: disable=W0706
+      return cast(str, response[0])
+    except Exception as e:  # pylint: disable=W0706
       raise SdkException(message=f'Internal error: {e}') from e
 
-  def __getattr__(self, name: str):
-    """ Method missing handler """
+  def __getattr__(self: Self, name: str) -> Callable[..., dict[str, Any] | list[Any]]:
+    """Method missing handler"""
 
-    def method(*args: dict):
+    def method(*args: dict[str, Any], **kwargs: dict[str, Any]) -> dict[str, Any] | list[Any]:
       """Handler"""
-      arguments = {}
+      arguments: dict[str, Any] = {}
 
       if len(args) > 0:
         arguments = args[0]
+
+      if len(kwargs) > 0:
+        arguments.update(kwargs)
 
       return self.call(name, arguments)
 
     return method
 
 
-class SdkException(BaseException):
-  """Sdk general exceptions"""
-  _message = ''
-
-  def __init__(self, message='Exception'):
-    """Constructor"""
-    self._message = message
-    super().__init__()
-
-  def _readable(self):
-    """Readable property"""
-    return f'SdkException(message: {self._message})'
-
-  def __str__(self):
-    """Readable property"""
-    return self._readable()
-
-  def __repr__(self):
-    """Readable property"""
-    return self._readable()
-
-
-class WialonError(BaseException):
-  """Error handler class"""
-
-  _errors = {
-    '-1': 'Unhandled error code',
-    '1': 'Invalid session',
-    '2': 'Invalid service name',
-    '3': 'Invalid result',
-    '4': 'Invalid input',
-    '5': 'Error performing request',
-    '6': 'Unknown error',
-    '7': 'Access denied',
-    '8': 'Invalid user name or password',
-    '9': 'Authorization server is unavailable',
-    '10': 'Reached limit of concurrent requests',
-    '11': 'Password reset error',
-    '14': 'Billing error',
-    '1001': 'No messages for selected interval',
-    '1002': 'Item with such unique property already exists or Item'\
-          + 'cannot be created according to billing restrictions',
-    '1003': 'Only one request is allowed at the moment',
-    '1004': 'Limit of messages has been exceeded',
-    '1005': 'Execution time has exceeded the limit',
-    '1006': 'Exceeding the limit of attempts to enter a two-factor authorization code',
-    '1011': 'Your IP has changed or session has expired',
-    '2014': 'Selected user is a creator for some system objects, thus this user cannot'\
-          + 'be bound to a new account',
-    '2015': 'Sensor deleting is forbidden because of using in another sensor or advanced'\
-          + 'properties of the unit'
-  }
-
-  _code = '0'
-
-  _reason = ''
-
-  def __init__(self, code, reason):
-    """Constructor"""
-    print('Error code: ', code)
-    if str(code) not in self._errors:
-      self._reason = self._errors['-1']
-      self._code = '-1'
-    else:
-      self._reason = self._errors[str(code)]
-      self._code = str(code)
-
-    if len(reason) > 0:
-      self._reason += f' - {reason}'
-
-    super().__init__()
-
-  def _readable(self):
-    """Readable property"""
-    return f'WialonError(code: {self._code}, reason: {self._reason})'
-
-  def __str__(self):
-    """Readable property"""
-    return self._readable()
-
-  def __repr__(self):
-    """Readable property"""
-    return self._readable()
+__all__ = ['WialonSdk', 'SdkException', 'WialonError']

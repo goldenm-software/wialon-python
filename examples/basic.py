@@ -1,11 +1,13 @@
 """
 WialonSDK example usage
 """
+
+# ruff: noqa: T201
+
 from wialon.sdk import SdkException, WialonError, WialonSdk
 
 # Initialize Wialon instance
 sdk = WialonSdk(
-  is_development=True,
   scheme='https',
   host='hst-api.wialon.com',
   port=0,
@@ -15,7 +17,7 @@ sdk = WialonSdk(
 
 try:
   token = ''  # If you haven't a token, you should use our token generator
-  # https://goldenmcorp.com/resources/token-generator
+  # https://developers.layrz.com/tools/wialon-token-generator
   response = sdk.login(token)
   print(response)
 

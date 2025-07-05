@@ -14,7 +14,7 @@ jobs:
 
     runs-on: ubuntu-latest
     container:
-      image: ghcr.io/goldenm-software/python-builder:3.11
+      image: ghcr.io/goldenm-software/python-builder:uv-3.13-x86
       options: --user root
       credentials:
         username: ${{ github.repository_owner }}
@@ -24,13 +24,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
       
-      - name: Build
+      - name: Build and upload
         run: |
-          pip install --upgrade pip build twine
-          python3 -m build
-        
-      - name: Upload to Python Package Index
-        uses: pypa/gh-action-pypi-publish@v1.8.10
-        with:
-          user: ${{ secrets.GOLDENM_PYPI_USERNAME }}
-          password: ${{ secrets.GOLDENM_PYPI_PASSWORD }}
+          uv venv --python 3.13
+          uv sync --only-group dev
+          uv run python -m build
+          uv run python -m twine upload -u ${{ secrets.GOLDENM_PYPI_USERNAME }} -p ${{ secrets.GOLDENM_PYPI_PASSWORD }} dist/*
