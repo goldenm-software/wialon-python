@@ -1,6 +1,6 @@
 [project]
 name = "wialon"
-version = "1.1.4"
+version = "1.1.5"
 description = "Wialon Remote API SDK for Python"
 authors = [
   {name = "Golden M, Inc.", email = "software@goldenm.com"}
@@ -16,7 +16,7 @@ dependencies = [
 ]
 
 readme = "README.md"
-license = {text = "MIT License"}
+license = "MIT"
 
 keywords = [
   "wialon",
@@ -41,7 +41,6 @@ classifiers = [
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
   "Programming Language :: Python :: 3.14",
-  "License :: OSI Approved :: MIT License",
   "Development Status :: 5 - Production/Stable",
   "Operating System :: OS Independent",
 ]
